@@ -24,7 +24,16 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
   const [items, setItems] = useState(initialItems);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [refiningId, setRefiningId] = useState<string | null>(null);
+  const [selectedRenderId, setSelectedRenderId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function addRender(venueImageId: string, render: Render) {
+    setItems((prev) =>
+      prev.map((i) => (i.venueImageId === venueImageId ? { ...i, renders: [render, ...i.renders] } : i)),
+    );
+  }
 
   async function handleGenerate(venueImageId: string) {
     setGeneratingId(venueImageId);
@@ -32,9 +41,7 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
     const res = await fetch(`/api/venue-images/${venueImageId}/generate-render`, { method: "POST" });
     if (res.ok) {
       const { render } = await res.json();
-      setItems((prev) =>
-        prev.map((i) => (i.venueImageId === venueImageId ? { ...i, renders: [render, ...i.renders] } : i)),
-      );
+      addRender(venueImageId, render);
     } else if (res.status === 402) {
       setError("Not enough credits — recharge in Billing to generate more renders.");
     } else {
@@ -50,9 +57,7 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
     const res = await fetch(`/api/renders/${renderId}/refine`, { method: "POST" });
     if (res.ok) {
       const { render } = await res.json();
-      setItems((prev) =>
-        prev.map((i) => (i.venueImageId === venueImageId ? { ...i, renders: [render, ...i.renders] } : i)),
-      );
+      addRender(venueImageId, render);
     } else if (res.status === 402) {
       setError("Not enough credits — recharge in Billing to refine more renders.");
     } else {
@@ -60,6 +65,29 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
       setError(body?.error ?? "Refinement failed. Try again.");
     }
     setRefiningId(null);
+  }
+
+  async function handleSubmitFeedback(venueImageId: string) {
+    if (!selectedRenderId || !feedbackText.trim()) return;
+    setSubmittingFeedback(true);
+    setError(null);
+    const res = await fetch(`/api/renders/${selectedRenderId}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: feedbackText.trim() }),
+    });
+    if (res.ok) {
+      const { render } = await res.json();
+      addRender(venueImageId, render);
+      setFeedbackText("");
+      setSelectedRenderId(null);
+    } else if (res.status === 402) {
+      setError("Not enough credits — recharge in Billing to apply feedback.");
+    } else {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Feedback couldn't be applied. Try again.");
+    }
+    setSubmittingFeedback(false);
   }
 
   return (
@@ -96,17 +124,28 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
           {item.renders.length > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {item.renders.map((render) => (
-                <div key={render.id} className="group relative overflow-hidden rounded-lg border border-white/10">
+                <div
+                  key={render.id}
+                  className={`group relative overflow-hidden rounded-lg border ${
+                    selectedRenderId === render.id ? "border-loverai-gold" : "border-white/10"
+                  }`}
+                >
                   {render.status === "succeeded" && render.resultBlobUrl ? (
                     <>
-                      <Image
-                        src={render.resultBlobUrl}
-                        alt="Generated render"
-                        width={300}
-                        height={220}
-                        className="h-28 w-full object-cover"
-                        unoptimized
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRenderId(render.id === selectedRenderId ? null : render.id)}
+                        className="block w-full"
+                      >
+                        <Image
+                          src={render.resultBlobUrl}
+                          alt="Generated render"
+                          width={300}
+                          height={220}
+                          className="h-28 w-full object-cover"
+                          unoptimized
+                        />
+                      </button>
                       {render.jobType === "perspective_correction" && (
                         <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] text-loverai-gold">
                           refined
@@ -131,6 +170,24 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {selectedRenderId && item.renders.some((r) => r.id === selectedRenderId) && (
+            <div className="mt-4 flex gap-2">
+              <input
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder='e.g. "less disco balls, warmer lighting"'
+                className="glass-input flex-1 rounded-lg px-3 py-2 text-sm"
+              />
+              <button
+                onClick={() => handleSubmitFeedback(item.venueImageId)}
+                disabled={submittingFeedback || !feedbackText.trim()}
+                className="rounded-lg bg-loverai-gold px-3 py-2 text-sm font-medium text-loverai-deep hover:opacity-90 disabled:opacity-50"
+              >
+                {submittingFeedback ? "Applying…" : "Apply feedback"}
+              </button>
             </div>
           )}
         </div>

@@ -164,6 +164,22 @@ export const deliverables = pgTable("deliverables", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A client note on a specific render ("make shelves higher", "less disco
+// balls") that immediately triggers a scoped regeneration rather than a
+// whole new design attempt. `resultRenderId` points at the new Render the
+// feedback produced (versioned off the original via renders.parentRenderId)
+// — the row here exists mainly as an audit trail of what was asked for.
+export const feedback = pgTable("feedback", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  renderId: uuid("render_id")
+    .notNull()
+    .references(() => renders.id, { onDelete: "cascade" }),
+  text: text("text").notNull(),
+  status: text("status").notNull().default("pending"), // pending | applied | failed
+  resultRenderId: uuid("result_render_id").references((): AnyPgColumn => renders.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
