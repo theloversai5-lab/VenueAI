@@ -7,6 +7,7 @@ import {
   integer,
   numeric,
   jsonb,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -95,6 +96,42 @@ export const designComponents = pgTable("design_components", {
   boundingBox: jsonb("bounding_box").notNull(), // { x, y, width, height } normalized 0..1
   attributes: jsonb("attributes"), // { material?, colorPalette?, sizeClass?, styleTags? }
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// A "design attempt" for a venue — the container renders attach to.
+// One venue can have multiple designs over time (re-attempts), though
+// Phase 5's UI only ever creates/reuses a single draft one for now.
+export const designs = pgTable("designs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  venueId: uuid("venue_id")
+    .notNull()
+    .references(() => venues.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default("Design 1"),
+  status: text("status").notNull().default("draft"), // draft | in_progress | complete
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// One async generation job + its result. `parentRenderId` is unused until
+// Phase 8's feedback-driven regeneration but included now so that table
+// doesn't need a migration later — a regeneration becomes a new Render
+// versioned off the one the feedback was about, rather than mutating it.
+export const renders = pgTable("renders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  designId: uuid("design_id")
+    .notNull()
+    .references(() => designs.id, { onDelete: "cascade" }),
+  venueImageId: uuid("venue_image_id")
+    .notNull()
+    .references(() => venueImages.id, { onDelete: "cascade" }),
+  area: text("area"), // the matched area/zone this render was generated for
+  referenceImageIds: jsonb("reference_image_ids"), // string[] — references used as conditioning
+  status: text("status").notNull().default("queued"), // queued | running | succeeded | failed
+  resultBlobUrl: text("result_blob_url"),
+  errorMessage: text("error_message"),
+  parentRenderId: uuid("parent_render_id").references((): AnyPgColumn => renders.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 
 export const wallets = pgTable("wallets", {

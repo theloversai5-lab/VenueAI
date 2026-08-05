@@ -45,6 +45,12 @@ export default async function VenueOverviewPage({
             Decor elements extracted from your reference images.
           </p>
         </Link>
+        <Link href={`/venues/${venue.id}/designs`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Designs</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Generate AI-decorated renders of your venue photos.
+          </p>
+        </Link>
       </div>
     </div>
   );
