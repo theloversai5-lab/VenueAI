@@ -1,0 +1,45 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/db";
+import { venues } from "@/db/schema";
+import { getOrCreateAppUser } from "@/lib/auth";
+
+export default async function VenueOverviewPage({
+  params,
+}: {
+  params: Promise<{ venueId: string }>;
+}) {
+  const { venueId } = await params;
+  const user = await getOrCreateAppUser();
+  const venue = await db.query.venues.findFirst({
+    where: and(eq(venues.id, venueId), eq(venues.ownerUserId, user.id)),
+  });
+  if (!venue) notFound();
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <h1 className="heading-font text-3xl text-white">{venue.name}</h1>
+      <div className="mt-2 flex gap-3 text-sm text-[color:var(--text-muted)]">
+        {venue.address && <span>{venue.address}</span>}
+        {venue.eventType && <span>· {venue.eventType}</span>}
+        {venue.guestCount && <span>· {venue.guestCount} guests</span>}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Link href={`/venues/${venue.id}/photos`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Venue photos</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Upload photos of the venue from multiple angles.
+          </p>
+        </Link>
+        <Link href={`/venues/${venue.id}/references`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Reference images</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Upload inspiration images and tag them by area.
+          </p>
+        </Link>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,170 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* ===========================
+   VENUEAI DESIGN SYSTEM
+   Ported from theloversai5-lab/LoversAi's warm brown/gold + glassmorphism
+   identity (frontend/src/index.css, frontend/tailwind.config.js) so VenueAI
+   shares the same family look. Adapted to Tailwind v4's CSS-first @theme.
+   =========================== */
+
+:root {
+  --color-loverai-deep: #0a0604;
+  --color-loverai-dark: #0f0a07;
+  --color-loverai-base: #1a100b;
+  --color-loverai-card: #1c120c;
+  --color-loverai-surface: #291e16;
+  --color-loverai-elevated: #33251c;
+  --color-loverai-gold: #e6c6b2;
+  --color-loverai-gold-bright: #e6c6b2;
+
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-strong: rgba(255, 255, 255, 0.1);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);
+  --glass-blur: 20px;
+  --glass-blur-strong: 30px;
+
+  --text-primary: #ffffff;
+  --text-secondary: #e8e6e3;
+  --text-muted: #9a8b7a;
+  --text-dim: #6b584d;
+
+  --background: var(--color-loverai-base);
+  --foreground: var(--text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-loverai-deep: var(--color-loverai-deep);
+  --color-loverai-dark: var(--color-loverai-dark);
+  --color-loverai-base: var(--color-loverai-base);
+  --color-loverai-card: var(--color-loverai-card);
+  --color-loverai-surface: var(--color-loverai-surface);
+  --color-loverai-elevated: var(--color-loverai-elevated);
+  --color-loverai-gold: var(--color-loverai-gold);
+  --font-heading: "DM Serif Display", Georgia, serif;
+  --font-display: "Playfair Display", serif;
+  --font-body: "Inter", "Poppins", system-ui, sans-serif;
+
+  --animate-fade-in-up: fadeInUp 0.5s ease-out;
+  --animate-scale-in: scaleIn 0.4s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s infinite;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.heading-font {
+  font-family: var(--font-heading);
+}
+
+.display-font {
+  font-family: var(--font-display);
+}
+
+/* ===========================
+   GLASSMORPHISM UTILITIES
+   =========================== */
+
+.glass-card {
+  background: linear-gradient(
+    152.97deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-card-strong {
+  background: linear-gradient(
+    152.97deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-sidebar {
+  background: rgba(10, 6, 4, 0.5);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-topbar {
+  background: rgba(10, 6, 4, 0.4);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  border-color: rgba(230, 198, 178, 0.3);
+  outline: none;
+}
