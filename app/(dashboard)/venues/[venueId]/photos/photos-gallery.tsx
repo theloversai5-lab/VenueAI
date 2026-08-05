@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import { UploadDropzone } from "@/components/upload-dropzone";
+import { AREA_LABELS, type Area } from "@/lib/areas";
 
 type VenueImage = {
   id: string;
   blobUrl: string;
   angleLabel: string | null;
+  zoneLabel: string | null;
+  obstacleCount: number;
 };
 
 const ANGLE_OPTIONS = ["front", "aerial", "satellite", "interior", "other"] as const;
@@ -21,6 +24,8 @@ export function PhotosGallery({
 }) {
   const [images, setImages] = useState(initialImages);
   const [pendingAngle, setPendingAngle] = useState<string>("front");
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleUploaded(result: { blobUrl: string; blobPathname: string }) {
     const res = await fetch("/api/venue-images", {
@@ -35,8 +40,29 @@ export function PhotosGallery({
     });
     if (res.ok) {
       const { image } = await res.json();
-      setImages((prev) => [image, ...prev]);
+      setImages((prev) => [{ ...image, zoneLabel: null, obstacleCount: 0 }, ...prev]);
     }
+  }
+
+  async function handleAnalyze(id: string) {
+    setAnalyzingId(id);
+    setError(null);
+    const res = await fetch(`/api/venue-images/${id}/analyze-scene`, { method: "POST" });
+    if (res.ok) {
+      const { analysis } = await res.json();
+      setImages((prev) =>
+        prev.map((i) =>
+          i.id === id
+            ? { ...i, zoneLabel: analysis.zoneLabel, obstacleCount: (analysis.obstacles ?? []).length }
+            : i,
+        ),
+      );
+    } else if (res.status === 402) {
+      setError("Not enough credits — recharge in Billing to analyze more photos.");
+    } else {
+      setError("Scene analysis failed. Try again.");
+    }
+    setAnalyzingId(null);
   }
 
   async function handleDelete(id: string) {
@@ -62,10 +88,11 @@ export function PhotosGallery({
       </div>
 
       <UploadDropzone venueId={venueId} kind="photos" onUploaded={handleUploaded} />
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {images.map((image) => (
-          <div key={image.id} className="glass-card group relative overflow-hidden rounded-lg">
+          <div key={image.id} className="glass-card group relative overflow-hidden rounded-lg pb-9">
             <Image
               src={image.blobUrl}
               alt={image.angleLabel ?? "venue photo"}
@@ -83,6 +110,24 @@ export function PhotosGallery({
             >
               Delete
             </button>
+            <div className="px-2 pt-2 text-xs">
+              {image.zoneLabel ? (
+                <span className="text-loverai-gold">
+                  {AREA_LABELS[image.zoneLabel as Area] ?? image.zoneLabel}
+                  {image.obstacleCount > 0 && (
+                    <span className="text-[color:var(--text-muted)]"> · {image.obstacleCount} obstacle(s)</span>
+                  )}
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleAnalyze(image.id)}
+                  disabled={analyzingId === image.id}
+                  className="text-[color:var(--text-muted)] hover:text-loverai-gold disabled:opacity-50"
+                >
+                  {analyzingId === image.id ? "Analyzing…" : "Analyze scene"}
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

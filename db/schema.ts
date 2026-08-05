@@ -46,6 +46,23 @@ export const venueImages = pgTable("venue_images", {
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Structured scene understanding for one venue photo. `zoneLabel` reuses the
+// same area taxonomy as reference_images.area (see lib/areas.ts) — Phase 5's
+// auto-mapping matches a reference image's area straight to a venue photo's
+// zoneLabel, so keeping one vocabulary here is what makes that mapping a
+// simple equality check instead of a second classification problem.
+export const venueImageAnalysis = pgTable("venue_image_analysis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  venueImageId: uuid("venue_image_id")
+    .notNull()
+    .unique()
+    .references(() => venueImages.id, { onDelete: "cascade" }),
+  zoneLabel: text("zone_label"), // entrance | stage | mandap | lounge | bar | dining | ceiling | walkway | other
+  obstacles: jsonb("obstacles"), // [{ type, boundingBox: {x,y,width,height} }]
+  perspectiveNotes: jsonb("perspective_notes"), // { horizonLineY?, scaleReferenceNote? }
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const referenceImages = pgTable("reference_images", {
   id: uuid("id").primaryKey().defaultRandom(),
   venueId: uuid("venue_id")
