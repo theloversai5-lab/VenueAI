@@ -149,6 +149,21 @@ export const layouts = pgTable("layouts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// A generated client-facing output file (currently: the combined
+// presentation PDF). Deterministic assembly from already-generated data
+// (renders, references, component library) — no AI call, so no credit
+// charge for creating one.
+export const deliverables = pgTable("deliverables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  designId: uuid("design_id")
+    .notNull()
+    .references(() => designs.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // presentation_pdf (more types — moodboard, bom — can reuse this table later)
+  blobUrl: text("blob_url").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")

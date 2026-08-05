@@ -57,6 +57,12 @@ export default async function VenueOverviewPage({
             Top-down guest-flow plan for the venue.
           </p>
         </Link>
+        <Link href={`/venues/${venue.id}/presentation`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Presentation</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Client-facing PDF: renders, moodboard, bill of materials.
+          </p>
+        </Link>
       </div>
     </div>
   );
