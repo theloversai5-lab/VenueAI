@@ -11,6 +11,7 @@ type ReferenceImage = {
   area: string | null;
   areaSource: string | null;
   styleTags: string[] | null;
+  componentCount: number;
 };
 
 export function ReferencesGallery({
@@ -23,6 +24,7 @@ export function ReferencesGallery({
   const [images, setImages] = useState(initialImages);
   const [filter, setFilter] = useState<"all" | Area>("all");
   const [classifyingId, setClassifyingId] = useState<string | null>(null);
+  const [extractingId, setExtractingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const visible = useMemo(
@@ -64,6 +66,23 @@ export function ReferencesGallery({
       setError("Classification failed. Try again.");
     }
     setClassifyingId(null);
+  }
+
+  async function handleExtractComponents(id: string) {
+    setExtractingId(id);
+    setError(null);
+    const res = await fetch(`/api/reference-images/${id}/extract-components`, { method: "POST" });
+    if (res.ok) {
+      const { components } = await res.json();
+      setImages((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, componentCount: i.componentCount + components.length } : i)),
+      );
+    } else if (res.status === 402) {
+      setError("Not enough credits — recharge in Billing to extract more components.");
+    } else {
+      setError("Component extraction failed. Try again.");
+    }
+    setExtractingId(null);
   }
 
   async function handleDelete(id: string) {
@@ -111,15 +130,28 @@ export function ReferencesGallery({
             >
               Delete
             </button>
-            {!image.area && (
+            <div className="absolute left-2 top-2 flex flex-col gap-1">
+              {!image.area && (
+                <button
+                  onClick={() => handleClassify(image.id)}
+                  disabled={classifyingId === image.id}
+                  className="rounded bg-loverai-gold px-2 py-0.5 text-xs font-medium text-loverai-deep disabled:opacity-50"
+                >
+                  {classifyingId === image.id ? "Classifying…" : "AI classify"}
+                </button>
+              )}
               <button
-                onClick={() => handleClassify(image.id)}
-                disabled={classifyingId === image.id}
-                className="absolute left-2 top-2 rounded bg-loverai-gold px-2 py-0.5 text-xs font-medium text-loverai-deep disabled:opacity-50"
+                onClick={() => handleExtractComponents(image.id)}
+                disabled={extractingId === image.id}
+                className="rounded bg-black/50 px-2 py-0.5 text-xs text-white opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
               >
-                {classifyingId === image.id ? "Classifying…" : "AI classify"}
+                {extractingId === image.id
+                  ? "Extracting…"
+                  : image.componentCount > 0
+                    ? `Re-extract (${image.componentCount})`
+                    : "Extract components"}
               </button>
-            )}
+            </div>
             {image.styleTags && image.styleTags.length > 0 && (
               <div className="px-2 pt-2 flex flex-wrap gap-1">
                 {image.styleTags.map((tag) => (

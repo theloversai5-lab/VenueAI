@@ -39,6 +39,12 @@ export default async function VenueOverviewPage({
             Upload inspiration images and tag them by area.
           </p>
         </Link>
+        <Link href={`/venues/${venue.id}/components`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Component library</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Decor elements extracted from your reference images.
+          </p>
+        </Link>
       </div>
     </div>
   );
