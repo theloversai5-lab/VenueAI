@@ -54,6 +54,7 @@ export const referenceImages = pgTable("reference_images", {
   blobUrl: text("blob_url").notNull(),
   blobPathname: text("blob_pathname").notNull(),
   area: text("area"), // entrance | stage | mandap | lounge | bar | dining | ceiling | walkway | other
+  areaSource: text("area_source"), // manual | ai_suggested — null until tagged either way
   styleTags: text("style_tags").array(),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
 });

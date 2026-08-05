@@ -1,9 +1,20 @@
-// Stub for Phase 2. AI calls will go through Vercel AI SDK v7 (see the `ai`
-// package, already installed) via the AI Gateway, using GEMINI_API_KEY /
-// GROQ_API_KEY as the underlying provider credentials. Each call's
-// usage/cost metadata feeds `api_usage_log.reportedCostUsd` — see
-// lib/billing.ts for the 5x markup conversion.
-//
-// Intentionally empty until Phase 2 confirms the exact AI SDK v7 provider
-// string / usage-metadata shape (see the vercel:ai-sdk skill).
-export {};
+import { createGroq } from "@ai-sdk/groq";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+
+// Direct provider packages, not the Vercel AI Gateway: the Gateway needs its
+// own AI_GATEWAY_API_KEY (a separate credential we don't have), whereas
+// these keys are the raw Gemini/Groq keys reused from the sibling Planner
+// repo. Cost is therefore derived from `result.usage` (token counts, which
+// the SDK always reports) times a price-per-token table in lib/pricing.ts,
+// rather than a dollar figure the Gateway would otherwise hand back directly.
+
+export const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+export const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.NANNO_BANANA,
+});
+
+export const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
+export const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
