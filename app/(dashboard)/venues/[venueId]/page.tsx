@@ -51,6 +51,12 @@ export default async function VenueOverviewPage({
             Generate AI-decorated renders of your venue photos.
           </p>
         </Link>
+        <Link href={`/venues/${venue.id}/layout`} className="glass-card rounded-xl p-6 hover:border-white/30">
+          <h2 className="heading-font text-lg text-loverai-gold">Layout</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Top-down guest-flow plan for the venue.
+          </p>
+        </Link>
       </div>
     </div>
   );

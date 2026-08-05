@@ -9,6 +9,7 @@ type Render = {
   status: string;
   resultBlobUrl: string | null;
   errorMessage: string | null;
+  jobType: string;
 };
 
 type PanelItem = {
@@ -22,6 +23,7 @@ type PanelItem = {
 export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
   const [items, setItems] = useState(initialItems);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [refiningId, setRefiningId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleGenerate(venueImageId: string) {
@@ -40,6 +42,24 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
       setError(body?.error ?? "Render generation failed. Try again.");
     }
     setGeneratingId(null);
+  }
+
+  async function handleRefine(venueImageId: string, renderId: string) {
+    setRefiningId(renderId);
+    setError(null);
+    const res = await fetch(`/api/renders/${renderId}/refine`, { method: "POST" });
+    if (res.ok) {
+      const { render } = await res.json();
+      setItems((prev) =>
+        prev.map((i) => (i.venueImageId === venueImageId ? { ...i, renders: [render, ...i.renders] } : i)),
+      );
+    } else if (res.status === 402) {
+      setError("Not enough credits — recharge in Billing to refine more renders.");
+    } else {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Refinement failed. Try again.");
+    }
+    setRefiningId(null);
   }
 
   return (
@@ -76,16 +96,30 @@ export function DesignsPanel({ items: initialItems }: { items: PanelItem[] }) {
           {item.renders.length > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {item.renders.map((render) => (
-                <div key={render.id} className="overflow-hidden rounded-lg border border-white/10">
+                <div key={render.id} className="group relative overflow-hidden rounded-lg border border-white/10">
                   {render.status === "succeeded" && render.resultBlobUrl ? (
-                    <Image
-                      src={render.resultBlobUrl}
-                      alt="Generated render"
-                      width={300}
-                      height={220}
-                      className="h-28 w-full object-cover"
-                      unoptimized
-                    />
+                    <>
+                      <Image
+                        src={render.resultBlobUrl}
+                        alt="Generated render"
+                        width={300}
+                        height={220}
+                        className="h-28 w-full object-cover"
+                        unoptimized
+                      />
+                      {render.jobType === "perspective_correction" && (
+                        <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] text-loverai-gold">
+                          refined
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleRefine(item.venueImageId, render.id)}
+                        disabled={refiningId === render.id}
+                        className="absolute bottom-1 right-1 rounded bg-black/60 px-2 py-0.5 text-[10px] text-white opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
+                      >
+                        {refiningId === render.id ? "Refining…" : "Refine"}
+                      </button>
+                    </>
                   ) : render.status === "failed" ? (
                     <div className="flex h-28 w-full items-center justify-center bg-red-950/40 p-2 text-center text-[10px] text-red-300">
                       {render.errorMessage ?? "Failed"}

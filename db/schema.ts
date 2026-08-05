@@ -125,6 +125,7 @@ export const renders = pgTable("renders", {
     .notNull()
     .references(() => venueImages.id, { onDelete: "cascade" }),
   area: text("area"), // the matched area/zone this render was generated for
+  jobType: text("job_type").notNull().default("placement"), // placement | perspective_correction
   referenceImageIds: jsonb("reference_image_ids"), // string[] — references used as conditioning
   status: text("status").notNull().default("queued"), // queued | running | succeeded | failed
   resultBlobUrl: text("result_blob_url"),
@@ -132,6 +133,20 @@ export const renders = pgTable("renders", {
   parentRenderId: uuid("parent_render_id").references((): AnyPgColumn => renders.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+// A generated top-down 2D layout for a design — structured coordinates
+// rendered client-side as SVG, not an image-generation call (see Phase 6
+// notes: layout is a different kind of output than a photorealistic render,
+// so it gets its own table rather than overloading `renders`).
+export const layouts = pgTable("layouts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  designId: uuid("design_id")
+    .notNull()
+    .references(() => designs.id, { onDelete: "cascade" }),
+  elements: jsonb("elements").notNull(), // [{ type, label, x, y, width, height, rotation }] normalized 0..1
+  guestCount: integer("guest_count"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const wallets = pgTable("wallets", {
