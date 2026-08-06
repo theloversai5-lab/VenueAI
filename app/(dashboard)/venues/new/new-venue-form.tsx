@@ -32,7 +32,7 @@ export function NewVenueForm() {
       return;
     }
     const { venue } = await res.json();
-    router.push(`/venues/${venue.id}`);
+    router.push(`/venues/${venue.id}/setup`);
   }
 
   return (

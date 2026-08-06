@@ -26,7 +26,21 @@ export default async function VenueOverviewPage({
         {venue.guestCount && <span>· {venue.guestCount} guests</span>}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Link
+        href={`/venues/${venue.id}/setup`}
+        className="glass-card-strong mt-8 flex items-center justify-between rounded-xl p-6 hover:border-white/30"
+      >
+        <div>
+          <h2 className="heading-font text-lg text-loverai-gold">Quick setup</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+            Drop in all your photos at once and describe what you want — VenueAI sorts and
+            generates for you.
+          </p>
+        </div>
+        <span className="text-loverai-gold">→</span>
+      </Link>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link href={`/venues/${venue.id}/photos`} className="glass-card rounded-xl p-6 hover:border-white/30">
           <h2 className="heading-font text-lg text-loverai-gold">Venue photos</h2>
           <p className="mt-1 text-sm text-[color:var(--text-muted)]">
