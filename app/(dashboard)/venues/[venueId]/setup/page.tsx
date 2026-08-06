@@ -18,14 +18,9 @@ export default async function VenueSetupPage({
   if (!venue) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="heading-font text-3xl text-white">{venue.name} — quick setup</h1>
-      <p className="mt-2 text-sm text-[color:var(--text-muted)]">
-        Drop in your venue photos and inspiration images together, describe what you want, and
-        VenueAI will sort them out — asking if anything&apos;s unclear — then generate your first
-        renders.
-      </p>
-      <div className="mt-6">
+    <div className="mx-auto flex h-[calc(100vh-9.5rem)] min-h-[560px] max-w-6xl flex-col">
+      <h1 className="heading-font shrink-0 text-2xl text-white">{venue.name} — quick setup</h1>
+      <div className="mt-4 min-h-0 flex-1">
         <SetupAssistant venueId={venueId} />
       </div>
     </div>

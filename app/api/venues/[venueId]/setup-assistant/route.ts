@@ -16,7 +16,17 @@ const FORCE_DECISION_AFTER_TURNS = 2; // ask at most this many clarifying questi
 
 const bodySchema = z.object({
   images: z
-    .array(z.object({ blobUrl: z.string().url(), blobPathname: z.string().min(1) }))
+    .array(
+      z.object({
+        blobUrl: z.string().url(),
+        blobPathname: z.string().min(1),
+        // Set when the image came from an angle-labeled upload card in the
+        // UI rather than a generic dropzone — the model doesn't need to
+        // guess kind/angle for these, only (for references) the area.
+        presetKind: z.enum(["venue", "reference"]).optional(),
+        presetAngle: z.enum(ANGLE_OPTIONS).optional(),
+      }),
+    )
     .min(1)
     .max(MAX_IMAGES),
   prompt: z.string().max(1000),
@@ -63,12 +73,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
   const mustDecideNow = questionsAskedSoFar >= FORCE_DECISION_AFTER_TURNS;
 
   const instructions = [
-    `You are helping set up an event venue design project. The user uploaded ${images.length} image(s) in one batch, mixing (a) photos of the actual venue space to be decorated and (b) inspiration/reference images showing a decor style they like — they did not sort them.`,
+    `You are helping set up an event venue design project. The user uploaded ${images.length} image(s), each already labeled by the upload UI as noted below — "venue" images are photos of the real space, "reference" images are style inspiration.`,
     `User's request: "${prompt}"`,
-    `For each image (numbered below in order, 0-indexed), decide: is it a "venue" photo (the real space) or a "reference" image (style inspiration)? For venue photos, optionally pick an angle from: ${ANGLE_OPTIONS.join(", ")}. For reference images, pick which venue area it represents from: ${AREA_OPTIONS.join(", ")}.`,
-    `If you are genuinely unsure about something important (e.g. an image could be either a venue photo or a reference, or its area is ambiguous), ask ONE short clarifying question instead of guessing — set done=false and fill "question". Otherwise set done=true and provide "mapping" for every image.`,
+    `For each image, its kind (and angle, if a venue photo) is already given — do NOT ask about or change those. Your only job per "reference" image is to decide which venue area it represents, from: ${AREA_OPTIONS.join(", ")}.`,
+    `If which area a reference image belongs to is genuinely ambiguous given the prompt, ask ONE short clarifying question instead of guessing — set done=false and fill "question". Otherwise set done=true and provide "mapping" for every image (repeat back the given kind/angle, plus your area pick for references).`,
     mustDecideNow
-      ? `You have already asked enough questions — you MUST set done=true now and make your best-guess mapping for every image, even if uncertain.`
+      ? `You have already asked enough questions — you MUST set done=true now and make your best-guess area for every reference image, even if uncertain.`
       : null,
   ]
     .filter(Boolean)
@@ -82,7 +92,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
       content: [
         { type: "text", text: instructions + (historyText ? `\n\nConversation so far:\n${historyText}` : "") },
         ...images.flatMap((img, i) => [
-          { type: "text" as const, text: `Image ${i}:` },
+          {
+            type: "text" as const,
+            text: `Image ${i}: ${img.presetKind ? `already labeled as ${img.presetKind}${img.presetAngle ? ` (${img.presetAngle})` : ""}` : "unlabeled"}.`,
+          },
           { type: "file" as const, mediaType: "image" as const, data: img.blobUrl },
         ]),
       ],
@@ -118,7 +131,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
   for (let i = 0; i < images.length; i++) {
     const entry = mappingByIndex.get(i);
     const img = images[i];
-    const kind = entry?.kind ?? "reference";
+    const kind = img.presetKind ?? entry?.kind ?? "reference";
 
     if (kind === "venue") {
       const [row] = await db
@@ -127,7 +140,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
           venueId,
           blobUrl: img.blobUrl,
           blobPathname: img.blobPathname,
-          angleLabel: entry?.angleLabel,
+          angleLabel: img.presetAngle ?? entry?.angleLabel,
         })
         .returning();
       createdVenueImages.push(row);
