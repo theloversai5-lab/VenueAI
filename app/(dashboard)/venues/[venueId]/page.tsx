@@ -18,7 +18,7 @@ export default async function VenueOverviewPage({
   if (!venue) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-2xl">
       <h1 className="heading-font text-3xl text-white">{venue.name}</h1>
       <div className="mt-2 flex gap-3 text-sm text-[color:var(--text-muted)]">
         {venue.address && <span>{venue.address}</span>}
@@ -40,44 +40,10 @@ export default async function VenueOverviewPage({
         <span className="text-loverai-gold">→</span>
       </Link>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Link href={`/venues/${venue.id}/photos`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Venue photos</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Upload photos of the venue from multiple angles.
-          </p>
-        </Link>
-        <Link href={`/venues/${venue.id}/references`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Reference images</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Upload inspiration images and tag them by area.
-          </p>
-        </Link>
-        <Link href={`/venues/${venue.id}/components`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Component library</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Decor elements extracted from your reference images.
-          </p>
-        </Link>
-        <Link href={`/venues/${venue.id}/designs`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Designs</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Generate AI-decorated renders of your venue photos.
-          </p>
-        </Link>
-        <Link href={`/venues/${venue.id}/layout`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Layout</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Top-down guest-flow plan for the venue.
-          </p>
-        </Link>
-        <Link href={`/venues/${venue.id}/presentation`} className="glass-card rounded-xl p-6 hover:border-white/30">
-          <h2 className="heading-font text-lg text-loverai-gold">Presentation</h2>
-          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
-            Client-facing PDF: renders, moodboard, bill of materials.
-          </p>
-        </Link>
-      </div>
+      <p className="mt-6 text-sm text-[color:var(--text-muted)]">
+        Use the sidebar to manage photos, references, components, designs, layout, and the
+        client presentation individually.
+      </p>
     </div>
   );
 }

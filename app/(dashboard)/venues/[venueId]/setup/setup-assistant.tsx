@@ -89,10 +89,6 @@ export function SetupAssistant({ venueId }: { venueId: string }) {
     if (!chatInput.trim() || submitting) return;
 
     if (stage === "collecting") {
-      if (totalImages === 0) {
-        setError("Add at least one photo before sending.");
-        return;
-      }
       setPrompt(chatInput.trim());
       setChatInput("");
       setStage("generating");
@@ -173,7 +169,15 @@ export function SetupAssistant({ venueId }: { venueId: string }) {
                   </motion.div>
                 )}
 
-                {stage === "done" && result && (
+                {stage === "done" && result && result.renders.length === 0 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
+                    <p className="text-sm text-[color:var(--text-muted)]">
+                      Nothing to generate yet — add a venue photo and try again.
+                    </p>
+                  </motion.div>
+                )}
+
+                {stage === "done" && result && result.renders.length > 0 && (
                   <motion.div
                     initial="hidden"
                     animate="visible"
@@ -223,26 +227,46 @@ export function SetupAssistant({ venueId }: { venueId: string }) {
       {error && <p className="mt-2 shrink-0 text-sm text-red-400">{error}</p>}
 
       {stage !== "done" && (
-        <div className="glass-input mt-4 flex shrink-0 items-center gap-2 rounded-xl px-3 py-2">
-          <input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={
-              stage === "collecting"
-                ? 'Describe what you want, e.g. "wedding mandap, gold and white theme, 200 guests"'
-                : "Type your answer…"
-            }
-            disabled={submitting}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[color:var(--text-dim)]"
-          />
-          <button
-            onClick={handleSend}
-            disabled={submitting || !chatInput.trim()}
-            className="rounded-lg bg-loverai-gold px-4 py-1.5 text-sm font-medium text-loverai-deep hover:opacity-90 disabled:opacity-50"
-          >
-            {submitting ? "…" : "Send"}
-          </button>
+        <div className="mt-4 shrink-0">
+          {stage === "collecting" && totalImages > 0 && (
+            <p className="mb-2 px-1 text-xs text-[color:var(--text-dim)]">
+              {totalImages} image{totalImages === 1 ? "" : "s"} attached
+            </p>
+          )}
+          <div className="glass-card-strong flex items-center gap-2 rounded-full py-2 pl-5 pr-2 shadow-lg shadow-black/20 ring-1 ring-white/5 transition focus-within:ring-loverai-gold/40">
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder={
+                stage === "collecting"
+                  ? 'Describe what you want, e.g. "wedding mandap, gold and white theme, 200 guests"'
+                  : "Type your answer…"
+              }
+              disabled={submitting}
+              className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[color:var(--text-dim)]"
+            />
+            <button
+              onClick={handleSend}
+              disabled={submitting || !chatInput.trim()}
+              aria-label="Send"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-loverai-gold text-loverai-deep transition hover:opacity-90 disabled:opacity-30"
+            >
+              {submitting ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-loverai-deep/40 border-t-loverai-deep" />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M2 8h11.5M9 3.5 13.5 8 9 12.5"
+                    stroke="currentColor"
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </div>

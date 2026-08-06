@@ -27,7 +27,6 @@ const bodySchema = z.object({
         presetAngle: z.enum(ANGLE_OPTIONS).optional(),
       }),
     )
-    .min(1)
     .max(MAX_IMAGES),
   prompt: z.string().max(1000),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).max(10),
@@ -59,6 +58,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ venueId
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   const { images, prompt, history } = parsed.data;
+
+  // Nothing to sort or generate from — skip the AI call entirely rather
+  // than spend a call reasoning about zero images.
+  if (images.length === 0) {
+    return NextResponse.json({ done: true, venueImages: [], referenceImages: [], analyses: [], renders: [] });
+  }
 
   try {
     await assertHasCredits(user.id);
