@@ -14,6 +14,9 @@ const CARD_DEFS = [
   { key: "interior", label: "Interior", hint: "Inside the space", kind: "photos" as const },
   { key: "other", label: "Other angle", hint: "Anything else useful", kind: "photos" as const },
   { key: "inspiration", label: "Inspiration", hint: "Decor styles you like", kind: "references" as const },
+  { key: "chairs", label: "Chairs", hint: "Chair styles you like", kind: "references" as const },
+  { key: "sofas", label: "Sofas & lounge", hint: "Lounge seating styles", kind: "references" as const },
+  { key: "flowers", label: "Flowers & decor", hint: "Floral / decor accents", kind: "references" as const },
 ];
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
